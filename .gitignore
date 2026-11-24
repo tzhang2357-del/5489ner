@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# 数据文件（过大，不提交；README 记录获取步骤）
+data/raw/
+
+# 模型权重（过大，通过组内约定位置共享）
+models/
+*.joblib
+
+# 原始组员交付包（已解压并集成到项目结构）
+role-b-crf/
+role-c-bert/
+role-b-crf.zip
+role-c-bert.zip
+
+# IDE / 系统
+.vscode/
+.idea/
+*.swp
+*.swo
+Thumbs.db
+.DS_Store
+
+# 临时克隆目录
+_5489ner_remote/

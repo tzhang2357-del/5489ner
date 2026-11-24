@@ -1,0 +1,3 @@
+# configs/
+# CRF 特征函数放此目录，文件名：crf_feature_fn.py
+# B 负责提供，A 的 predict.py 会自动加载
