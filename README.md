@@ -198,3 +198,15 @@ ner-project/
 - **无效 I-X 修正**：I-X 在句首或前词非同类时，视为 B-X。
 - **micro-F1**：汇总全部类型 TP/FP/FN 后计算 F1。
 - **10% 子集**：seed=42 按句无放回抽样，共 1,404 句，ID 存于 `data/train_10pct_ids.json`。
+
+## 角色 B 的补充实验
+
+[下载 B 的完整交付包](deliverables/role-b-crf-final.zip)，其中包含全量和 10% CRF 模型、逐句预测及验证集消融结果。
+
+[英文报告](report/role_b.md) 包含交叉验证、消融、分歧案例和稳健性分析。安装项目依赖与 matplotlib 后，从仓库根目录复现。扩展实验会重新生成下面稳健性分析所需的验证预测。数据文件使用项目指定的三个 Parquet 文件。
+
+```bash
+python src/extension_experiments.py data/raw/conll2003-train.parquet data/raw/conll2003-validation.parquet results/extensions/train_document_ids.json rerun/extensions
+python src/robustness.py data/raw/conll2003-train.parquet data/raw/conll2003-validation.parquet rerun/extensions data/train_10pct_ids.shared.json results/robustness/validation_document_ids.json rerun/robustness
+python src/plot_robustness.py rerun/robustness
+```
