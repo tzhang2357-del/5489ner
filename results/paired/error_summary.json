@@ -1,0 +1,149 @@
+{
+  "test_sentences": 3453,
+  "sample_definition": "CRF and BERT entity disagreements",
+  "sample_seed": 42,
+  "eligible_sentences": 951,
+  "sampled_sentences": 20,
+  "models": {
+    "crf": {
+      "test_metrics": {
+        "LOC": {
+          "precision": 0.8468677494199536,
+          "recall": 0.8752997601918465,
+          "f1-score": 0.8608490566037735,
+          "support": 1668
+        },
+        "MISC": {
+          "precision": 0.7678571428571429,
+          "recall": 0.7350427350427351,
+          "f1-score": 0.7510917030567688,
+          "support": 702
+        },
+        "ORG": {
+          "precision": 0.7710526315789473,
+          "recall": 0.7055990367248646,
+          "f1-score": 0.7368751964790946,
+          "support": 1661
+        },
+        "PER": {
+          "precision": 0.8513598987982289,
+          "recall": 0.8324056895485467,
+          "f1-score": 0.841776110068793,
+          "support": 1617
+        },
+        "micro avg": {
+          "precision": 0.817536838275423,
+          "recall": 0.7956798866855525,
+          "f1-score": 0.8064602960969044,
+          "support": 5648
+        },
+        "macro avg": {
+          "precision": 0.8092843556635683,
+          "recall": 0.7870868053769982,
+          "f1-score": 0.7976480165521075,
+          "support": 5648
+        },
+        "weighted avg": {
+          "precision": 0.816037269427685,
+          "recall": 0.7956798866855525,
+          "f1-score": 0.8052875837985057,
+          "support": 5648
+        }
+      },
+      "test_error_counts": {
+        "boundary": 168,
+        "type": 551,
+        "boundary_and_type": 85,
+        "missed": 350,
+        "spurious": 199
+      },
+      "test_recall_by_gold_entity_length": {
+        "1": {
+          "matched": 2769,
+          "support": 3574,
+          "recall": 0.7747621712367095
+        },
+        "2": {
+          "matched": 1510,
+          "support": 1776,
+          "recall": 0.8502252252252253
+        },
+        "3+": {
+          "matched": 215,
+          "support": 298,
+          "recall": 0.7214765100671141
+        }
+      }
+    },
+    "bert": {
+      "test_metrics": {
+        "LOC": {
+          "precision": 0.9339735894357744,
+          "recall": 0.9328537170263789,
+          "f1-score": 0.9334133173365327,
+          "support": 1668
+        },
+        "MISC": {
+          "precision": 0.7693333333333333,
+          "recall": 0.8219373219373219,
+          "f1-score": 0.7947658402203857,
+          "support": 702
+        },
+        "ORG": {
+          "precision": 0.8765217391304347,
+          "recall": 0.9102950030102348,
+          "f1-score": 0.8930891907855877,
+          "support": 1661
+        },
+        "PER": {
+          "precision": 0.9622057001239157,
+          "recall": 0.9604205318491033,
+          "f1-score": 0.9613122872175797,
+          "support": 1617
+        },
+        "micro avg": {
+          "precision": 0.9032145960034752,
+          "recall": 0.9203257790368272,
+          "f1-score": 0.9116899061650444,
+          "support": 5648
+        },
+        "macro avg": {
+          "precision": 0.8855085905058645,
+          "recall": 0.9063766434557596,
+          "f1-score": 0.8956451588900214,
+          "support": 5648
+        },
+        "weighted avg": {
+          "precision": 0.9046970915323824,
+          "recall": 0.9203257790368272,
+          "f1-score": 0.912309162088834,
+          "support": 5648
+        }
+      },
+      "test_error_counts": {
+        "boundary": 83,
+        "type": 226,
+        "boundary_and_type": 57,
+        "missed": 84,
+        "spurious": 191
+      },
+      "test_recall_by_gold_entity_length": {
+        "1": {
+          "matched": 3277,
+          "support": 3574,
+          "recall": 0.916899832120873
+        },
+        "2": {
+          "matched": 1655,
+          "support": 1776,
+          "recall": 0.9318693693693694
+        },
+        "3+": {
+          "matched": 266,
+          "support": 298,
+          "recall": 0.8926174496644296
+        }
+      }
+    }
+  }
+}

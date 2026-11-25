@@ -1,0 +1,10 @@
+{
+  "c1": 0.01,
+  "c2": 0.1,
+  "train_sha256": "1c14a0d34accb2c0b1ec61b732000a323019eb63fdd3ca86bddc2b05a2ec0d04",
+  "validation_sha256": "48d75b38d9b08a850e0b31d61d69dd6816687ed6017f347a22afcecaf673ad15",
+  "documents": 946,
+  "clustered_types": 7516,
+  "validation_token_coverage": 0.8706826058175304,
+  "svd_variance_fraction": 0.13604734359612153
+}

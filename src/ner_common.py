@@ -124,7 +124,7 @@ def read_predictions(path, gold_rows):
             raise ValueError(f"Duplicate or unknown sample ID {row_id} in {path}")
         tokens = gold_by_id[row_id]["tokens"]
         tags = record["pred_tags"]
-        if record["tokens"] != tokens or not isinstance(tags, list) or len(tags) != len(tokens):
+        if ("tokens" in record and record["tokens"] != tokens) or not isinstance(tags, list) or len(tags) != len(tokens):
             raise ValueError(f"Tokens or tag count do not match the test row {row_id} in {path}")
         predictions[row_id] = normalize_tags(tags)
     missing = gold_by_id.keys() - predictions.keys()
