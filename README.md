@@ -210,3 +210,8 @@ python src/extension_experiments.py data/raw/conll2003-train.parquet data/raw/co
 python src/robustness.py data/raw/conll2003-train.parquet data/raw/conll2003-validation.parquet rerun/extensions data/train_10pct_ids.shared.json results/robustness/validation_document_ids.json rerun/robustness
 python src/plot_robustness.py rerun/robustness
 ```
+## 角色 C 的 BERT 实验
+
+[查看 C 的英文报告](report/role_c.md) · [下载 E2 和 E4 模型](https://github.com/tzhang2357-del/5489ner/releases/tag/bert-v1)
+
+E2 使用全量训练集，测试 micro-F1 为 91.17%；E4 使用与 E3 相同的 10% 训练子集，测试 micro-F1 为 85.02%。
