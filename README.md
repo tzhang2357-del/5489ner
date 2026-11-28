@@ -118,16 +118,24 @@ ner-project/
 ├── models/                       训练产物（不入 git）
 │   ├── crf_full.joblib            E1 模型
 │   ├── crf_10pct.joblib           E3 模型
-│   └── bert_full/                 E2 模型（C 单独共享）
+│   └── bert_full/                 E2 模型（C 通过 GitHub Release `bert-v1` 发布）
 ├── results/
 │   ├── predictions/               四组逐句预测 e1~e4_*_test.jsonl
 │   ├── metrics.csv                四组指标汇总（统一复算）
 │   ├── error_cases.csv            CRF vs BERT 分歧案例（seed 42 抽 20 条）
 │   ├── demo_outputs.txt           演示记录
 │   ├── metrics_by_type_bert.csv   C 的分类别指标
-│   └── recall_by_length_bert.csv  C 的长度分组召回
+│   ├── recall_by_length_bert.csv  C 的长度分组召回
+│   ├── final/                     B 汇总的四组最终分数与对比图
+│   ├── extensions/                B 的扩展实验（交叉验证/消融/聚类）
+│   └── robustness/                B 的 10% 子集抽样稳健性分析
+├── deliverables/
+│   └── role-b-crf-final.zip       B 的最终 CRF 交付包
 └── report/
-    └── report_draft.md            整合报告初稿（A 合稿）
+    ├── report_draft.md            整合报告初稿（A 合稿）
+    ├── contributions.md           贡献表模板（待全员确认）
+    ├── role_b.md                  B 的英文报告
+    └── role_c.md                  C 的英文报告
 ```
 
 ---
@@ -141,6 +149,18 @@ ner-project/
 | C（BERT 与复现） | 子词对齐、BERT 微调（E2/E4）、训练环境 | `train_bert.ipynb`、BERT 预测、manifest 与复现说明 |
 
 贡献占比表见报告 Appendix A（待全员确认姓名、学号与占比）。
+
+### 6.1 组员交付物与补充实验
+
+**B 的交付包**：[deliverables/role-b-crf-final.zip](deliverables/role-b-crf-final.zip)，含全量/10% CRF 模型、逐句预测与验证集消融结果；英文报告见 [report/role_b.md](report/role_b.md)，包含交叉验证、消融、分歧案例和稳健性分析。复现命令（装好项目依赖与 matplotlib 后，从仓库根目录执行）：
+
+```bash
+python src/extension_experiments.py data/raw/conll2003-train.parquet data/raw/conll2003-validation.parquet results/extensions/train_document_ids.json rerun/extensions
+python src/robustness.py data/raw/conll2003-train.parquet data/raw/conll2003-validation.parquet rerun/extensions data/train_10pct_ids.shared.json results/robustness/validation_document_ids.json rerun/robustness
+python src/plot_robustness.py rerun/robustness
+```
+
+**C 的 BERT 交付**：英文报告见 [report/role_c.md](report/role_c.md)；E2/E4 模型权重通过 GitHub Release 发布：[bert-v1](https://github.com/tzhang2357-del/5489ner/releases/tag/bert-v1)。E2 全量训练，测试 micro-F1 为 91.17%；E4 与 E3 使用同一 10% 训练子集，测试 micro-F1 为 85.02%。下载后解压到 `models/bert_full/` 即可用 `--model bert` 运行预测入口。
 
 ---
 

@@ -1,0 +1,50 @@
+{
+  "release": "https://github.com/tzhang2357-del/5489ner/releases/tag/bert-v1",
+  "checkpoint": "E2_best_model.zip",
+  "device": "cpu",
+  "demo": [
+    {
+      "input": "I study at City University of Hong Kong.",
+      "entities": [
+        {
+          "text": "City University of Hong Kong",
+          "type": "ORG"
+        }
+      ]
+    },
+    {
+      "input": "Barack Obama visited Paris.",
+      "entities": [
+        {
+          "text": "Barack Obama",
+          "type": "PER"
+        },
+        {
+          "text": "Paris",
+          "type": "LOC"
+        }
+      ]
+    },
+    {
+      "input": "It rained all morning.",
+      "entities": []
+    }
+  ],
+  "spot_checks": [
+    {
+      "test_id": "0",
+      "word_count": 12,
+      "matches_C_saved_tags": true
+    },
+    {
+      "test_id": "951",
+      "word_count": 28,
+      "matches_C_saved_tags": true
+    },
+    {
+      "test_id": "2164",
+      "word_count": 7,
+      "matches_C_saved_tags": true
+    }
+  ]
+}

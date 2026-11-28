@@ -1,0 +1,56 @@
+{
+  "experiments": [
+    "E2",
+    "E4"
+  ],
+  "dataset_revision": "e8237f8875e4ecf7f60b07ae49691b85cf893410",
+  "data": {
+    "train": {
+      "count": 14041,
+      "sha256": "1c14a0d34accb2c0b1ec61b732000a323019eb63fdd3ca86bddc2b05a2ec0d04",
+      "url": "https://huggingface.co/datasets/eriktks/conll2003/resolve/e8237f8875e4ecf7f60b07ae49691b85cf893410/conll2003/conll2003-train.parquet",
+      "path": "/content/ner_c_work/data/raw/conll2003-train.parquet"
+    },
+    "validation": {
+      "count": 3250,
+      "sha256": "48d75b38d9b08a850e0b31d61d69dd6816687ed6017f347a22afcecaf673ad15",
+      "url": "https://huggingface.co/datasets/eriktks/conll2003/resolve/e8237f8875e4ecf7f60b07ae49691b85cf893410/conll2003/conll2003-validation.parquet",
+      "path": "/content/ner_c_work/data/raw/conll2003-validation.parquet"
+    },
+    "test": {
+      "count": 3453,
+      "sha256": "47156dc0fe55dd2965fbf92e125b1d04d867560fbaae6d7e2576bd5f021c623e",
+      "url": "https://huggingface.co/datasets/eriktks/conll2003/resolve/e8237f8875e4ecf7f60b07ae49691b85cf893410/conll2003/conll2003-test.parquet",
+      "path": "/content/ner_c_work/data/raw/conll2003-test.parquet"
+    }
+  },
+  "model": "google-bert/bert-base-cased",
+  "model_revision": "cd5ef92a9fb2f889e972770a36d4ed042daf221e",
+  "local_base_assets_sha256": null,
+  "e4_subset": {
+    "source": "shared_ids",
+    "path": "/content/ner_c_work/data/train_10pct_ids.json",
+    "count": 1404,
+    "sha256": "d063c1ccf845a0657f2318cbf6e0f822d335ad7d64ec5fda5e1542d16650de1b",
+    "file_sha256": "3d1748de68bd6ad25c3ef9c0cdc1b4e96f8728fc7b8890b3b65cec0b5997a987"
+  },
+  "labels_in_id_order": [
+    "O",
+    "B-PER",
+    "I-PER",
+    "B-ORG",
+    "I-ORG",
+    "B-LOC",
+    "I-LOC",
+    "B-MISC",
+    "I-MISC"
+  ],
+  "counts": {
+    "train": 14041,
+    "validation": 3250,
+    "test": 3453
+  },
+  "metric_scale": "0..1",
+  "invalid_I_policy": "start a new entity",
+  "span_end": "exclusive"
+}
