@@ -1,0 +1,40 @@
+NER 系统演示记录（CRF 全量模型）
+========================================
+模型: models/crf_full.joblib（E1，全量训练集，B 训练）
+入口: python src/predict.py "<sentence>" --model crf
+记录时间: 2026-11-28
+
+样例 1：单个实体
+----------------------------------------
+输入: I study at City University of Hong Kong.
+输出: [ORG] City University of Hong Kong
+说明: 与 plan.md 中的预期示例一致。
+
+样例 2：多个实体
+----------------------------------------
+输入: Barack Obama was born in Hawaii and worked at the White House.
+输出:
+  [PER] Barack Obama
+  [LOC] Hawaii
+  [LOC] White House
+说明: "White House" 被标注为 LOC，人工标准应为 ORG。
+      这是一个典型的 ORG/LOC 类型混淆案例，可进入错误分析章节。
+
+样例 3：无实体
+----------------------------------------
+输入: The weather is nice today.
+输出: （无实体）
+说明: 无实体句子不产生误报。
+
+JSON 输出示例（样例 2）
+----------------------------------------
+[
+  {"text": "Barack Obama", "type": "PER"},
+  {"text": "Hawaii", "type": "LOC"},
+  {"text": "White House", "type": "LOC"}
+]
+
+备注
+----------------------------------------
+- BERT 模型权重由 C 单独共享，未随仓库分发；
+  拿到 checkpoint 放入 models/bert_full/ 后可用 --model bert 运行同一入口。

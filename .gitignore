@@ -32,3 +32,6 @@ Thumbs.db
 
 # 涓存椂鍏嬮殕鐩綍
 _5489ner_remote/
+
+# 远程仓库中的 plan 副本（内容与 plan.md 相同）
+plan(1).md

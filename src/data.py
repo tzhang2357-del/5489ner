@@ -309,8 +309,9 @@ def run_data_checks() -> Dict:
 
     # 3. 10% 子集检查
     subset = load_10pct_subset()
-    report["subset_n_sampled"] = subset["n_sampled"]
-    report["subset_seed"] = subset["seed"]
+    report["subset_source"] = subset.get("source_file", "A 生成的正式版")
+    report["subset_n_sampled"] = subset.get("n_sampled", len(subset["ids"]))
+    report["subset_seed"] = subset.get("seed", "(共享版未记录，由 B 用 random.Random(42) 生成)")
 
     # 4. 四类实体数量对比（全量 vs 子集）
     def count_types(samples: List[Sample]) -> Dict[str, int]:

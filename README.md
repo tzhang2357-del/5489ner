@@ -1,123 +1,96 @@
 # 英文命名实体识别（NER）｜CRF 与 BERT 比较
 
-## 1. 项目简介
+基于 CoNLL-2003 英文数据集，实现 NER 系统并比较 **CRF 基线** 与 **BERT 微调** 在
+**100% 全量** 和 **10% 少量** 训练数据下的实体级性能差异。
 
-基于 CoNLL-2003 英文数据集，训练命名实体识别系统，并比较：
-- **CRF 基线**（线性链条件随机场）
-- **BERT 微调**（`google-bert/bert-base-cased`）
+**状态**：四组实验已完成，全部指标经统一评估器独立复算并与 B/C 报告核对一致。
 
-在 **100% 全量**与 **10% 少量**两种训练数据条件下的实体级性能差异。
+---
+
+## 1. 结果总览（经 `src/evaluate.py` 统一复算）
+
+| # | 模型 | 训练数据 | P | R | micro-F1 | TP/FP/FN |
+|---|---|---|---:|---:|---:|---|
+| E1 | CRF | 100% (14,041 句) | 81.75 | 79.57 | **80.65** | 4494/1003/1154 |
+| E2 | BERT | 100% (14,041 句) | 90.32 | 92.03 | **91.17** | 5198/557/450 |
+| E3 | CRF | 10% (1,404 句) | 74.55 | 68.66 | **71.48** | 3878/1324/1770 |
+| E4 | BERT | 10% (1,404 句) | 83.89 | 86.19 | **85.02** | 4868/935/780 |
+
+- **RQ1** 全量条件 BERT − CRF = **+10.52** F1 点
+- **RQ2** 数据降至 10%：BERT −6.15 点，CRF −9.17 点 → BERT 数据效率更高
+- **RQ3** BERT 优势集中在 ORG（+15.62）与 ≥3 词长实体召回（+17.11）
+
+完整结果与报告见 [report/report_draft.md](report/report_draft.md)。
 
 ---
 
 ## 2. 数据获取
 
-本项目使用 [eriktks/conll2003](https://huggingface.co/datasets/eriktks/conll2003) 的公开 Parquet 文件。
+数据集：[eriktks/conll2003](https://huggingface.co/datasets/eriktks/conll2003)，固定修订版
+`e8237f8875e4ecf7f60b07ae49691b85cf893410`，放入 `data/raw/`：
 
-将以下三个文件下载至 `data/raw/`：
+| 文件 | 句数 | SHA-256（前 8 位） |
+|---|---|---|
+| `conll2003-train.parquet` | 14,041 | `1c14a0d3` |
+| `conll2003-validation.parquet` | 3,250 | `48d75b38` |
+| `conll2003-test.parquet` | 3,453 | `47156dc0` |
 
-| 文件名 | 句数 |
-|---|---|
-| `conll2003-train.parquet` | 14,041 |
-| `conll2003-validation.parquet` | 3,250 |
-| `conll2003-test.parquet` | 3,453 |
-
-下载方式（任选其一）：
+下载方式：
 
 ```bash
-# 方式一：huggingface hub CLI
-pip install huggingface-hub
-huggingface-cli download eriktks/conll2003 \
-  --repo-type dataset \
-  --local-dir data/raw/
+# 方式一：国内镜像（已验证可用）
+# 基址: https://hf-api.gitee.com/datasets/eriktks/conll2003/resolve/e8237f8875e4ecf7f60b07ae49691b85cf893410/conll2003/
 
-# 方式二：Python 脚本
+# 方式二：标准 Hugging Face（需可访问 huggingface.co）
 python -c "
 from datasets import load_dataset
 ds = load_dataset('eriktks/conll2003')
 for split in ['train', 'validation', 'test']:
     ds[split].to_parquet(f'data/raw/conll2003-{split}.parquet')
-print('Done.')
 "
 ```
+
+> 注意：`hf-mirror.com` 目前会 308 重定向回 huggingface.co，若直连失败可改用
+> `hf-api.gitee.com` 镜像直接下载 Parquet。
 
 ---
 
 ## 3. 环境安装
 
 ```bash
-# 基础依赖（CRF + 评估）
 pip install -r requirements.txt
-
-# 若需运行 BERT（C 负责）
+# BERT 复现额外需要（C 使用 Colab GPU）：
 pip install torch transformers accelerate
 ```
-
-依赖版本见 `requirements.txt`。
 
 ---
 
 ## 4. 快速开始
 
-### 4.1 生成 10% 训练子集 ID（A 负责，第 1 天完成）
-
 ```bash
-python src/data.py subset --seed 42 --frac 0.10
-# 输出 → data/train_10pct_ids.json
-```
-
-### 4.2 数据质量检查
-
-```bash
+# 1) 数据质量检查（句数、标签长度、10% 子集分布）
 python src/data.py check
-```
 
-### 4.3 预览样本
-
-```bash
+# 2) 预览样本
 python src/data.py show test -n 3
-```
 
-### 4.4 运行预测（需先完成模型训练）
-
-```bash
-# CRF
+# 3) 实体抽取演示（CRF 全量模型，需 models/crf_full.joblib）
 python src/predict.py "I study at City University of Hong Kong." --model crf
+python src/predict.py "Barack Obama was born in Hawaii." --model crf --json
 
-# BERT
-python src/predict.py "Barack Obama was born in Hawaii." --model bert
+# 4) 复算任一实验的测试集指标
+python src/evaluate.py eval results/predictions/e1_crf_full_test.jsonl --name E1
 
-# JSON 输出
-python src/predict.py "..." --model crf --json
-```
-
-### 4.5 评估预测结果
-
-预测文件格式（JSON）：
-```json
-[
-  {"id": "0", "tokens": ["I", "study", "at", ...], "pred_tags": ["O", "O", "O", ...]}
-]
-```
-
-运行评估：
-```bash
-python src/evaluate.py eval results/predictions/crf_full_test.json \
-  --name E1_CRF_100pct \
-  --save
-
-# 对比两个模型的分歧样本
+# 5) 抽取 CRF 与 BERT 的分歧案例（写入 results/error_cases.csv）
 python src/evaluate.py diff \
-  results/predictions/crf_full_test.json \
-  results/predictions/bert_full_test.json \
-  --n 20
-```
+  results/predictions/e1_crf_full_test.jsonl \
+  results/predictions/e2_bert_full_test.jsonl --n 20
 
-### 4.6 测试集实体统计
-
-```bash
+# 6) 测试集 gold 实体统计
 python src/evaluate.py gold-stats
 ```
+
+演示输出记录见 [results/demo_outputs.txt](results/demo_outputs.txt)（单实体 / 多实体 / 无实体三种场景）。
 
 ---
 
@@ -125,76 +98,71 @@ python src/evaluate.py gold-stats
 
 ```
 ner-project/
-├── README.md                   ← 本文件
+├── README.md
 ├── requirements.txt
-├── plan.md                     ← 组内工作计划
+├── plan.md                       组内工作计划
 ├── data/
-│   ├── raw/                    ← Parquet 文件放此处
-│   └── train_10pct_ids.json   ← 10% 子集 ID（自动生成）
-├── configs/
-│   └── crf_feature_fn.py      ← B 提供 CRF 特征函数（可选）
+│   ├── raw/                      Parquet 数据（不入 git）
+│   ├── train_10pct_ids.shared.json   B/C 确认的共享 10% 子集（1,404 句，seed 42）
+│   └── train_10pct_ids.proposed.json B 的原始建议稿
 ├── src/
-│   ├── data.py                 ← A：数据读取、标签映射、抽样
-│   ├── spans.py                ← A：BIO 解码、无效 I-X 修正
-│   ├── evaluate.py             ← A：统一评估、指标输出、分歧抽取
-│   ├── predict.py              ← A：预测入口，支持 CRF/BERT 切换
-│   ├── train_crf.py            ← B：CRF 训练
-│   └── train_bert.py           ← C：BERT 微调
-├── models/                     ← 训练产物（大文件不入 git）
-│   ├── crf_full.joblib
-│   ├── crf_10pct.joblib
-│   └── bert_full/
+│   ├── data.py              [A]  数据读取、标签映射、抽样、质量检查
+│   ├── spans.py             [A]  BIO 解码、无效 I-X 修正
+│   ├── evaluate.py          [A]  统一评估、分类型/分长度指标、分歧抽取
+│   ├── predict.py           [A]  预测入口（CRF/BERT 可切换）
+│   ├── ner_common.py        [B]  CRF 侧数据加载与指标工具
+│   ├── train_crf.py         [B]  CRF 训练与导出
+│   ├── analyze_errors.py    [B]  错例对比分析脚本
+│   ├── plot_crf.py          [B]  CRF 结果绘图
+│   └── train_bert.ipynb     [C]  BERT 微调 notebook（Colab）
+├── models/                       训练产物（不入 git）
+│   ├── crf_full.joblib            E1 模型
+│   ├── crf_10pct.joblib           E3 模型
+│   └── bert_full/                 E2 模型（C 单独共享）
 ├── results/
-│   ├── predictions/            ← 逐句预测 JSON
-│   ├── metrics.csv             ← 四组实验指标汇总
-│   └── error_cases.csv         ← 分歧案例表
+│   ├── predictions/               四组逐句预测 e1~e4_*_test.jsonl
+│   ├── metrics.csv                四组指标汇总（统一复算）
+│   ├── error_cases.csv            CRF vs BERT 分歧案例（seed 42 抽 20 条）
+│   ├── demo_outputs.txt           演示记录
+│   ├── metrics_by_type_bert.csv   C 的分类别指标
+│   └── recall_by_length_bert.csv  C 的长度分组召回
 └── report/
+    └── report_draft.md            整合报告初稿（A 合稿）
 ```
 
 ---
 
-## 6. 成员分工（对应 plan.md 第 10 节）
+## 6. 成员分工与贡献
 
-| 成员 | 主责 | 关键文件 |
+| 成员 | 主责 | 关键交付物 |
 |---|---|---|
-| A（数据与集成） | 数据、抽样、BIO 解码、评估、预测入口、合稿 | `data.py` `spans.py` `evaluate.py` `predict.py` |
-| B（CRF 与分析） | CRF 特征与训练（E1/E3）、错误分析 | `train_crf.py`、`configs/crf_feature_fn.py` |
-| C（BERT 与复现） | 子词对齐、BERT 微调（E2/E4）、训练环境 | `train_bert.py` |
+| A（数据与集成） | 数据、共享抽样、BIO 解码、统一评估、预测入口、结果整合与合稿 | `data.py` `spans.py` `evaluate.py` `predict.py`、`metrics.csv`、`error_cases.csv`、`report_draft.md` |
+| B（CRF 与分析） | CRF 特征与训练（E1/E3）、错例分析 | `train_crf.py` `ner_common.py`、CRF 模型与预测、CRF 报告章节 |
+| C（BERT 与复现） | 子词对齐、BERT 微调（E2/E4）、训练环境 | `train_bert.ipynb`、BERT 预测、manifest 与复现说明 |
+
+贡献占比表见报告 Appendix A（待全员确认姓名、学号与占比）。
 
 ---
 
-## 7. 四组核心实验（对应 plan.md 第 8 节）
+## 7. 接口约定（组内统一）
 
-| 编号 | 模型 | 训练数据 | 负责人 |
-|---|---|---|---|
-| E1 | CRF | 100% | B |
-| E2 | BERT | 100% | C |
-| E3 | CRF | 固定 10%（seed=42） | B |
-| E4 | BERT | 同一 10%（seed=42） | C |
-
----
-
-## 8. 接口约定
-
-**B/C 训练完成后，预测文件格式（JSON list）**：
-```json
-{
-  "id": "sample_id_string",
-  "tokens": ["word1", "word2", ...],
-  "pred_tags": ["B-PER", "I-PER", "O", ...]
-}
-```
-长度与 tokens 一致，BIO 标签使用组内统一 LABEL_LIST（见 `src/data.py`）。
-
-**B 的 CRF 模型**：保存为 `.joblib`，路径约定 `models/crf_full.joblib`、`models/crf_10pct.joblib`。
-
-**C 的 BERT 模型**：保存为 HuggingFace 模型目录，路径约定 `models/bert_full/`、`models/bert_10pct/`。
+- **词级标签接口**：`predict_tags(tokens) -> List[str]`，每个词一个 BIO 标签。
+- **预测文件**：JSONL 或 JSON 数组，字段 `{"id", "tokens", "pred_tags"}`；
+  C 的 `test_pred_tags.jsonl`（仅 `id` + `pred_tags`）同样被评估器接受。
+- **无效 I-X 规则**：`I-X` 在句首或前无同类型开放实体时视为 `B-X`（训练与打分同规则）。
+- **严格匹配**：`(样本ID, 起始词, 结束词右开, 类型)` 全一致才算正确。
+- **10% 子集**：`data/train_10pct_ids.shared.json`，1,404 句，SHA-256 `3d1748de…a987`，
+  两组低资源实验共享同一份 ID。
 
 ---
 
-## 9. 关键定义
+## 8. 复算指引（可追溯性）
 
-- **严格匹配**：(样本 ID, 起始词索引, 结束词索引, 类型) 完全一致，结束索引右开。
-- **无效 I-X 修正**：I-X 在句首或前词非同类时，视为 B-X。
-- **micro-F1**：汇总全部类型 TP/FP/FN 后计算 F1。
-- **10% 子集**：seed=42 按句无放回抽样，共 1,404 句，ID 存于 `data/train_10pct_ids.json`。
+| 想复算的内容 | 命令 |
+|---|---|
+| E1–E4 任一指标 | `python src/evaluate.py eval results/predictions/<file>.jsonl --name <exp>` |
+| seqeval 交叉核对 | 同上（默认启用，输出 `micro-F1-seqeval`） |
+| 分歧案例 | `python src/evaluate.py diff <crf>.jsonl <bert>.jsonl --n 20` |
+| 数据完整性 | `python src/data.py check` |
+
+所有预测文件覆盖 3,453/3,453 句测试样本（评估器会打印覆盖率并断言）。
