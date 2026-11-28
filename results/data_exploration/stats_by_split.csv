@@ -1,0 +1,4 @@
+split,sentences,tokens,entities,n_PER,n_ORG,n_LOC,n_MISC,mean_sent_len,max_sent_len,mean_ent_len,pct_ent_ge3
+train,14041,203621,23499,6600,6321,7140,3438,14.5,113,1.45,5.46
+validation,3250,51362,5942,1842,1341,1837,922,15.8,109,1.45,5.35
+test,3453,46435,5648,1617,1661,1668,702,13.45,124,1.44,5.28

@@ -28,7 +28,15 @@ Our hypotheses were H1 (BERT > CRF in the full setting), H2 (BERT degrades less 
 
 ### 2.1 Data
 
-We use the public CoNLL-2003 English shared-task data as distributed in the `eriktks/conll2003` Hugging Face dataset at revision `e8237f8875e4ecf7f60b07ae49691b85cf893410`. The three Parquet splits contain 14,041 training, 3,250 validation and 3,453 test sentences. Each sentence provides pre-tokenized words and IOB2 NER tags over nine labels (`O`, `B/I-PER`, `B/I-ORG`, `B/I-LOC`, `B/I-MISC`). The SHA-256 checksums of the three files are recorded in `results/` experiment metadata and were verified identical across all three members' environments, so the reported numbers are computed on byte-identical data.
+We use the public CoNLL-2003 English shared-task data as distributed in the `eriktks/conll2003` Hugging Face dataset at revision `e8237f8875e4ecf7f60b07ae49691b85cf893410`. The three Parquet splits contain 14,041 training, 3,250 validation and 3,453 test sentences. Each sentence provides pre-tokenized words and IOB2 NER tags over nine labels (`O`, `B/I-PER`, `B/I-ORG`, `B/I-LOC`, `B/I-MISC`). The SHA-256 checksums of the three files are recorded in `results/` experiment metadata and were verified identical across all three members' environments, so the reported numbers are computed on byte-identical data. Figures 1–2 summarize the corpus: the training split contains 23,499 gold entities, validation 5,942 and test 5,648; LOC is the most frequent training type (7,140) and MISC the rarest (3,438). Sentences average 13–16 tokens with a cap near 120, and entity length is strongly skewed — roughly 94.6% of entities are one or two words (5.3–5.5% have three or more), which foreshadows why long-entity recall separates the models (§5.3).
+
+![Figure 1](../results/data_exploration/entity_type_distribution.png)
+
+*Figure 1. Gold entity counts by type and split.*
+
+![Figure 2](../results/data_exploration/sentence_length_distribution.png)
+
+*Figure 2. Sentence length distribution (left) and gold entity length distribution (right).*
 
 ### 2.2 The 10% training condition
 
@@ -75,9 +83,9 @@ Model selection never touches the test set: CRF regularization `(c1, c2)` was ch
 - **RQ2:** BERT loses **6.15** points when data drops to 10% (91.17 → 85.02); CRF loses **9.17** points (80.65 → 71.48). H2 is supported; the model gap widens to +13.54 points under low resources.
 - The gap persists in the 10% setting at a higher level than under full data, i.e. BERT's pre-training substitutes for a substantial amount of labeled data.
 
-![Figure 1](../results/final/four_experiments.png)
+![Figure 3](../results/final/four_experiments.png)
 
-*Figure 1. Test entity-level micro-F1 for the four conditions (E1–E4).*
+*Figure 3. Test entity-level micro-F1 for the four conditions (E1–E4).*
 
 ### 5.2 Per entity type　[A verified]
 
@@ -116,15 +124,15 @@ To check that the regularization chosen on the validation split generalizes acro
 
 The cross-validation winner, `c1=0.01, c2=0.1`, is the pair the validation sweep had already selected, and it ranks first in every individual fold — the E1/E3 baselines therefore do not hinge on one lucky split. These means are measured when fitting on two folds only, so they sit below the full-training validation score.
 
-![Figure 2](../results/extensions/cv_ablation.png)
+![Figure 4](../results/extensions/cv_ablation.png)
 
-*Figure 2. CRF tuning and validation ablation: grouped cross-validation F1 for the three regularization candidates and validation micro-F1 of the cumulative feature sets.*
+*Figure 4. CRF tuning and validation ablation: grouped cross-validation F1 for the three regularization candidates and validation micro-F1 of the cumulative feature sets.*
 
 ### 6.2 Feature ablation and unsupervised word clusters
 
-![Figure 3](../results/extensions/training_entity_lengths.png)
+![Figure 5](../results/extensions/training_entity_lengths.png)
 
-*Figure 3. Training-set entity length distribution by type: long entities are dominated by organizations.*
+*Figure 5. Training-set entity length distribution by type: long entities are dominated by organizations.*
 
 Organizations account for 780 of the training entities with three or more words, against 76 long locations — one reason we track ORG F1 alongside the overall score. Cumulative feature sets were compared on the official validation split with optimizer, regularization and iteration limit held fixed:
 
@@ -145,9 +153,9 @@ The shared 10% subset is a single draw, so we measured sampling variance directl
 
 For the cluster feature we additionally resampled the 216 validation articles with replacement 10,000 times, pairing variants C and D on the same resampled articles: the D−C difference is +0.27 points with a paired 95% percentile interval of [−0.14, +0.69]; for ORG, −0.03 [−0.96, +0.96]. All three grouped cross-validation folds also favour D slightly. These intervals describe validation-article sampling given fixed fitted models.
 
-![Figure 4](../results/robustness/robustness.png)
+![Figure 6](../results/robustness/robustness.png)
 
-*Figure 4. Low-data CRF variability across ten 10% draws and paired document-level bootstrap intervals for the cluster feature.*
+*Figure 6. Low-data CRF variability across ten 10% draws and paired document-level bootstrap intervals for the cluster feature.*
 
 ## 7. Error analysis
 
@@ -188,15 +196,15 @@ BERT dominates CRF in both data budgets (+10.52 / +13.54 F1), and the advantage 
 - `eriktks/conll2003` dataset card. https://huggingface.co/datasets/eriktks/conll2003
 - `seqeval` library. https://pypi.org/project/seqeval/
 
-## Appendix A — Contributions　[待全员确认]
+## Appendix A — Contributions
 
 | Member | Student ID | Share | Work and verifiable outputs |
 |---|---|---:|---|
-| A（待填） | 待填 | 待定 | Data pipeline, 10% shared-ID management, unified BIO decoding and evaluator, prediction interface and demo, result integration and report consolidation |
-| B（待填） | 待填 | 待定 | CRF features and training (E1/E3), error analysis, CRF report sections |
-| C（待填） | 待填 | 待定 | BERT fine-tuning and subword alignment (E2/E4), training environment, manifests and reproduction notes |
+| WANG Chengru (A) | 60254685 | 33% | Data download and quality checks, shared 10% subset management, data-exploration figures, BIO decoder, unified evaluator (all four experiments re-scored independently), prediction entry and demo, metrics/error-case integration, report consolidation and figures |
+| ZHANG Tongwei (B) | 61091750 | 34% | CRF features and training (E1/E3), doc-grouped cross-validation, feature ablation, SVD+k-means word clusters, 10%-draw robustness analysis, CRF error profile and report sections |
+| Xu Shenghao (C) | 61115726 | 33% | BERT fine-tuning and subword alignment (E2/E4), training manifests and logs, BERT model release (`bert-v1`) and reproduction notes, BERT report sections |
 
-Final shares sum to 100% and will be confirmed after the submission package is frozen.
+Shares sum to 100%.
 
 ## Appendix B — Artifact index
 

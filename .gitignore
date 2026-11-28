@@ -30,8 +30,13 @@ role-c-bert.zip
 Thumbs.db
 .DS_Store
 
-# 临时克隆目录
+# 临时目录（打包 staging 与最终提交包）
 _5489ner_remote/
+.tmp_submission/
+submission/
 
-# Զ�ֿ̲��е� plan ������������ plan.md ��ͬ��
+# 远程仓库中的 plan 副本与本地方 plan.md 内容相同
 plan(1).md
+
+# 报告 PDF 构建的中间产物
+report/report.html

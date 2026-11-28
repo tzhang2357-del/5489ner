@@ -110,6 +110,7 @@ ner-project/
 │   ├── spans.py             [A]  BIO 解码、无效 I-X 修正
 │   ├── evaluate.py          [A]  统一评估、分类型/分长度指标、分歧抽取
 │   ├── predict.py           [A]  预测入口（CRF/BERT 可切换）
+│   ├── explore_data.py      [A]  数据探索图（类型/句长/实体长度分布）
 │   ├── ner_common.py        [B]  CRF 侧数据加载与指标工具
 │   ├── train_crf.py         [B]  CRF 训练与导出
 │   ├── analyze_errors.py    [B]  错例对比分析脚本
@@ -124,6 +125,7 @@ ner-project/
 │   ├── metrics.csv                四组指标汇总（统一复算）
 │   ├── error_cases.csv            CRF vs BERT 分歧案例（seed 42 抽 20 条）
 │   ├── demo_outputs.txt           演示记录
+│   ├── data_exploration/          数据探索图与统计（A）
 │   ├── metrics_by_type_bert.csv   C 的分类别指标
 │   ├── recall_by_length_bert.csv  C 的长度分组召回
 │   ├── final/                     B 汇总的四组最终分数与对比图
