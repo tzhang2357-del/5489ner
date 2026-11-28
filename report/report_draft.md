@@ -8,7 +8,7 @@
 
 ## Abstract　[A]
 
-We compare two approaches to English named entity recognition (NER) on CoNLL-2003: a linear-chain conditional random field (CRF) with handcrafted features, and a fine-tuned `bert-base-cased` word-classification model. Both systems are evaluated under two training-data budgets: the full 14,041-sentence training set and a fixed 10% subset of 1,404 sentences shared by both models. Using the same BIO decoder and strict entity-level scoring on the 3,453-sentence test set, BERT outperforms CRF by 10.52 F1 points in the full setting (91.17 vs 80.65) and by 13.54 points in the low-resource setting (85.02 vs 71.48). Reducing training data costs BERT 6.15 points but CRF 9.17 points, indicating that BERT is substantially more sample-efficient. The advantage concentrates on multi-token entities and on the ORG type; the gap is smallest on MISC, where CRF is even marginally better under 10% training data (67.58 vs 66.57). A paired error analysis on 20 disagreement sentences shows that in 13 of 20 cases BERT is fully correct where CRF is not, against 2 cases in the opposite direction.
+We compare two approaches to English named entity recognition (NER) on CoNLL-2003: a linear-chain conditional random field (CRF) with handcrafted features, and a fine-tuned `bert-base-cased` word-classification model. Both systems are evaluated under two training-data budgets: the full 14,041-sentence training set and a fixed 10% subset of 1,404 sentences shared by both models. Using the same BIO decoder and strict entity-level scoring on the 3,453-sentence test set, BERT outperforms CRF by 10.52 F1 points in the full setting (91.17 vs 80.65) and by 13.54 points in the low-resource setting (85.02 vs 71.48). Reducing training data costs BERT 6.15 points but CRF 9.17 points, indicating that BERT is substantially more sample-efficient. The advantage concentrates on multi-token entities and on the ORG type; the gap is smallest on MISC, where CRF is even marginally better under 10% training data (67.58 vs 66.57). A paired error analysis on 20 disagreement sentences shows that in 13 of 20 cases BERT is fully correct where CRF is not, against 2 cases in the opposite direction. For the CRF we additionally report document-grouped 3-fold cross-validation for regularization tuning, a cumulative feature ablation (74.64 → 88.74 validation F1), unsupervised word clusters built with TF-IDF, truncated SVD and k-means, and a robustness study over ten different 10% draws (validation F1 78.16 ± 0.59).
 
 ## 1. Introduction　[A]
 
@@ -22,7 +22,7 @@ We address three research questions:
 - **RQ2.** When training data is reduced to a fixed 10% subset, how many F1 points does each model lose?
 - **RQ3.** What qualitative differences appear in boundary, type, missed and spurious errors?
 
-Our hypotheses were H1 (BERT > CRF in the full setting), H2 (BERT degrades less under data reduction) and H3 (BERT recovers complete boundaries on multi-token entities more often). All three are supported by the results reported below; we discuss qualifications in Section 8.
+Our hypotheses were H1 (BERT > CRF in the full setting), H2 (BERT degrades less under data reduction) and H3 (BERT recovers complete boundaries on multi-token entities more often). All three are supported by the results reported below; we discuss qualifications in Section 9.
 
 ## 2. Data and Evaluation　[A]
 
@@ -36,7 +36,7 @@ The low-resource condition uses 1,404 training sentences (10% of the training sp
 
 ### 2.3 Evaluation protocol
 
-All models output one raw IOB2 tag per original word. Before scoring, an `I-X` tag that does not continue an open entity of type X is reinterpreted as `B-X`; the same rule is used at inference time and in the demo. Entities are matched strictly: a prediction is a true positive only if sample ID, start word, end word (right-open) and type all match the gold annotation. Counts are summed over all types before computing micro P/R/F1, and per-type F1 and per-length recall (1-word, 2-word, ≥3-word entities) are reported as secondary metrics. Scores are cross-checked with `seqeval` (IOB2, strict mode) and agree exactly. For low-resource runs, model configuration was selected by validation micro-F1; the test set was scored only after the configuration was frozen.
+All models output one raw IOB2 tag per original word. Before scoring, an `I-X` tag that does not continue an open entity of type X is reinterpreted as `B-X`; the same rule is used at inference time and in the demo. Entities are matched strictly: a prediction is a true positive only if sample ID, start word, end word (right-open) and type all match the gold annotation. Counts are summed over all types before computing micro P/R/F1, and per-type F1 and per-length recall (1-word, 2-word, ≥3-word entities) are reported as secondary metrics. Scores are cross-checked with `seqeval` (IOB2, strict mode) and agree exactly. For low-resource runs, model configuration was selected by validation micro-F1; the test set was scored only after the configuration was frozen. The CRF's chosen regularization is re-checked with document-grouped cross-validation in Section 6.1.
 
 ### 2.4 Reproduction
 
@@ -58,6 +58,8 @@ Each prediction file records `id`, `tokens` and `pred_tags` for all 3,453 test s
 
 Four conditions share the same test set: E1 CRF-full, E2 BERT-full, E3 CRF-10%, E4 BERT-10%. Training environments, hyper-parameters, epoch logs and library versions are recorded under each experiment's `results/` directory; the dataset and model revisions are pinned in `results/manifest.json`.
 
+Model selection never touches the test set: CRF regularization `(c1, c2)` was chosen on the official validation split and is re-checked with document-grouped 3-fold cross-validation on the training split (§6.1); BERT checkpoints were selected by validation micro-F1. The four headline test scores use each model's frozen configuration. Additional CRF analyses — feature ablation, word clusters and 10%-sample robustness — are computed on validation data only and are reported in Section 6.
+
 ## 5. Results
 
 ### 5.1 Overall　[A verified]
@@ -73,6 +75,10 @@ Four conditions share the same test set: E1 CRF-full, E2 BERT-full, E3 CRF-10%, 
 - **RQ2:** BERT loses **6.15** points when data drops to 10% (91.17 → 85.02); CRF loses **9.17** points (80.65 → 71.48). H2 is supported; the model gap widens to +13.54 points under low resources.
 - The gap persists in the 10% setting at a higher level than under full data, i.e. BERT's pre-training substitutes for a substantial amount of labeled data.
 
+![Figure 1](../results/final/four_experiments.png)
+
+*Figure 1. Test entity-level micro-F1 for the four conditions (E1–E4).*
+
 ### 5.2 Per entity type　[A verified]
 
 | Type | Support | E1 CRF-full | E2 BERT-full | Δ (full) | E3 CRF-10% | E4 BERT-10% | Δ (10%) |
@@ -82,7 +88,7 @@ Four conditions share the same test set: E1 CRF-full, E2 BERT-full, E3 CRF-10%, 
 | LOC | 1,668 | 86.08 | 93.34 | +7.26 | 77.06 | 87.71 | +10.65 |
 | MISC | 702 | 75.11 | 79.48 | +4.37 | 67.58 | 66.57 | −1.01 |
 
-BERT's largest gains are on **ORG** (+15.62) in the full setting and on **PER** under low resources (+19.05). MISC is the hardest type for both models, and in the 10% condition CRF is marginally better (67.58 vs 66.57) — the single exception to BERT dominance, discussed in Section 8.
+BERT's largest gains are on **ORG** (+15.62) in the full setting and on **PER** under low resources (+19.05). MISC is the hardest type for both models, and in the 10% condition CRF is marginally better (67.58 vs 66.57) — the single exception to BERT dominance, discussed in Section 9.
 
 ### 5.3 Recall by gold entity length　[A verified]
 
@@ -94,9 +100,58 @@ BERT's largest gains are on **ORG** (+15.62) in the full setting and on **PER** 
 
 Extending H3: BERT is better in every length bucket, with the biggest margin on **≥3-word entities** (+17.11 points, full setting; +20.47 under 10%). CRF's recall collapses on long entities under data reduction (54.03%), while BERT retains 74.50%.
 
-## 6. Error analysis
+## 6. Additional analyses　[B/A verified]
 
-### 6.1 Paired disagreement sample　[A]
+The headline results above use the original CRF and BERT systems, frozen before any test scoring. This section documents the supplementary experiments behind their design choices — regularization tuning, feature ablation, word clusters and low-resource robustness. All of them are computed on the official validation split and the training split only, so none of them peeks at test data.
+
+### 6.1 Grouped cross-validation for CRF regularization
+
+To check that the regularization chosen on the validation split generalizes across news articles, we recovered 946 document IDs by matching every training sentence token-for-token against the English training text with document boundaries. A GroupKFold split then held out whole documents in three folds (314 / 316 / 316 documents, i.e. 4,679 / 4,681 / 4,681 sentences), so every training sentence was held out exactly once. Three candidate `(c1, c2)` pairs were trained and scored with the same feature set and the same folds:
+
+| c1 | c2 | Fold 1 | Fold 2 | Fold 3 | Mean F1 | SD |
+|---:|---:|---:|---:|---:|---:|---:|
+| 0.01 | 0.1 | 85.86 | 86.33 | 86.02 | **86.07** | 0.24 |
+| 0.1 | 0.1 | 85.66 | 86.09 | 85.49 | 85.75 | 0.31 |
+| 0.1 | 1.0 | 84.07 | 84.43 | 83.68 | 84.06 | 0.38 |
+
+The cross-validation winner, `c1=0.01, c2=0.1`, is the pair the validation sweep had already selected, and it ranks first in every individual fold — the E1/E3 baselines therefore do not hinge on one lucky split. These means are measured when fitting on two folds only, so they sit below the full-training validation score.
+
+![Figure 2](../results/extensions/cv_ablation.png)
+
+*Figure 2. CRF tuning and validation ablation: grouped cross-validation F1 for the three regularization candidates and validation micro-F1 of the cumulative feature sets.*
+
+### 6.2 Feature ablation and unsupervised word clusters
+
+![Figure 3](../results/extensions/training_entity_lengths.png)
+
+*Figure 3. Training-set entity length distribution by type: long entities are dominated by organizations.*
+
+Organizations account for 780 of the training entities with three or more words, against 76 long locations — one reason we track ORG F1 alongside the overall score. Cumulative feature sets were compared on the official validation split with optimizer, regularization and iteration limit held fixed:
+
+| Variant | Features | micro-F1 | PER | ORG | LOC | MISC |
+|---|---|---:|---:|---:|---:|---:|
+| A | baseline word features | 74.64 | 72.59 | 67.20 | 79.62 | 78.62 |
+| B | + word shape and affixes | 84.81 | 86.63 | 76.59 | 88.86 | 85.26 |
+| C | + neighbouring words, their shape and sentence boundaries | **88.48** | 89.32 | 82.81 | 92.21 | 87.33 |
+| D | + current word's cluster ID | **88.74** | 89.95 | 82.78 | 92.45 | 87.42 |
+
+Variant C is the configuration used for E1/E3. Adding local context and boundary indicators (B→C) is the largest single step: +3.66 overall and +6.22 ORG points. On validation sentence 33, for example, variant B extracted only “County Cricket Board” while C recovered the full “Test and County Cricket Board”.
+
+Variant D adds an unsupervised cluster feature computed from training text alone. For every lowercased word occurring at least three times we counted its directional immediate neighbours, built a sublinear TF-IDF matrix over those contexts, reduced it to 32 dimensions with truncated SVD (13.6% of the variance retained), normalized the vectors, and ran k-means with 32 clusters (10 initializations, seed 42). The 7,516 clustered word types cover 87.07% of validation token occurrences; all other words receive an unknown-cluster feature. The clusters group words that occupy similar syntactic slots (e.g. *herve, don, ricardo, alain* for person-like names; *confirm, reach, protect, ease, choose* for report verbs). Cluster IDs are categorical CRF features, and entity labels enter only standard supervised training — no test information leaks into the clustering. The cluster feature adds +0.27 overall validation points but −0.03 for ORG: useful, yet far smaller than the contextual features.
+
+### 6.3 Robustness of the low-resource condition
+
+The shared 10% subset is a single draw, so we measured sampling variance directly. Ten independent 10% draws (same seed rule) yield validation micro-F1 of 78.16 ± 0.59 (range 77.19–79.05); the team's seed-42 draw is the lowest of the ten, so E3 is, if anything, a slightly pessimistic CRF point. The full-data CRF scores 88.48 on the same validation split, 10.32 points above the ten-draw mean — the data-budget effect dwarfs draw variance.
+
+For the cluster feature we additionally resampled the 216 validation articles with replacement 10,000 times, pairing variants C and D on the same resampled articles: the D−C difference is +0.27 points with a paired 95% percentile interval of [−0.14, +0.69]; for ORG, −0.03 [−0.96, +0.96]. All three grouped cross-validation folds also favour D slightly. These intervals describe validation-article sampling given fixed fitted models.
+
+![Figure 4](../results/robustness/robustness.png)
+
+*Figure 4. Low-data CRF variability across ten 10% draws and paired document-level bootstrap intervals for the cluster feature.*
+
+## 7. Error analysis
+
+### 7.1 Paired disagreement sample　[A]
 
 From all test sentences where E1 and E2 predict different entity sets, 20 were drawn with seed 42 (`results/error_cases.csv`), each recording gold, CRF and BERT entities. In this sample:
 
@@ -104,24 +159,24 @@ From all test sentences where E1 and E2 predict different entity sets, 20 were d
 - **2/20:** CRF fully correct, BERT wrong (e.g. dating/hyphenated numeric contexts).
 - **5/20:** both wrong (mostly MISC-with-punctuation and nested-entity ambiguities).
 
-### 6.2 CRF error profile (full test set)　[B]
+### 7.2 CRF error profile (full test set)　[B]
 
 Exact matches were removed first, then remaining overlapping spans were paired one-to-one (identical boundaries prioritized, then identical types, then greater IoU). This yielded 551 type errors, 168 boundary errors, 85 boundary+type errors, 350 misses and 199 spurious predictions. Representative rows are in B's analysis (`results/` CRF error tables). The dominant CRF failure mode is type confusion (ORG↔LOC↔PER), consistent with the per-type results above.
 
-### 6.3 Note from the demo　[A]
+### 7.3 Note from the demo　[A]
 
 A hand-run demo (`results/demo_outputs.txt`) shows the residual weakness that survives in a strong model class too: the full CRF labels `White House` as LOC instead of ORG. Fixing institutional-name ambiguity (White House, United Nations, …) would likely move ORG F1 the most for both models.
 
-## 7. Threats to validity　[A]
+## 8. Threats to validity　[A]
 
-- Single 10% sample: conclusions about data efficiency rest on one seed. The shared-ID design removes model-side confounds but not sampling variance; paired re-runs with additional seeds are future work.
-- One BERT configuration and one CRF feature set: differences reflect these two concrete implementations, not the model classes in general.
+- Sampling variance: the headline low-resource comparison rests on one shared 10% draw. Section 6.3 bounds this for the CRF — ten draws spread only ±0.59 F1 points, far below the 9.17-point data-budget effect — but a comparable multi-draw sweep for BERT was not run, and the seed-42 draw is the hardest of the ten for CRF, so the E3/E4 gap should be read with that in mind.
+- One BERT configuration and one CRF feature set: differences reflect these two concrete implementations, not the model classes in general. The feature ablation and cluster analyses (§6.2) are validation-only and CRF-only; they justify design choices but are not part of the E1–E4 test comparison.
 - The 20-sentence case study illustrates error categories; it is not a quantitative estimate of their frequencies.
 - CoNLL-2003's news domain limits generalization; entity conventions (MISC especially) are task-specific.
 
-## 8. Discussion and conclusion　[A 合稿]
+## 9. Discussion and conclusion　[A 合稿]
 
-BERT dominates CRF in both data budgets (+10.52 / +13.54 F1), and the advantage grows rather than shrinks when labels are scarce, answering RQ2: pre-training substitutes for labeled data more effectively than handcrafted features scale down gracefully. The advantage is uneven: it is largest on ORG and PER and on entities of three or more tokens, where CRF's local features cannot maintain complete boundaries. MISC remains hard for both models, and under 10% data CRF is even marginally better there — a reminder that transformer gains are type- and budget-dependent, not uniform. For this dataset and these implementations, the practical recommendation is straightforward: if a pre-trained encoder is available, use it, especially for multi-token entities and organizations; if not, a CRF remains a competitive, cheap baseline whose degradation under data reduction is steeper but whose rare-type behavior can be surprisingly robust.
+BERT dominates CRF in both data budgets (+10.52 / +13.54 F1), and the advantage grows rather than shrinks when labels are scarce, answering RQ2: pre-training substitutes for labeled data more effectively than handcrafted features scale down gracefully. The advantage is uneven: it is largest on ORG and PER and on entities of three or more tokens, where CRF's local features cannot maintain complete boundaries. MISC remains hard for both models, and under 10% data CRF is even marginally better there — a reminder that transformer gains are type- and budget-dependent, not uniform. For this dataset and these implementations, the practical recommendation is straightforward: if a pre-trained encoder is available, use it, especially for multi-token entities and organizations; if not, a CRF remains a competitive, cheap baseline whose degradation under data reduction is steeper but whose rare-type behavior can be surprisingly robust. Two extensions qualify the headline story. First, the CRF baseline is not an artifact of a lucky split: document-grouped cross-validation reproduces the validation-selected regularization and ranks it first in every fold (§6.1). Second, the ablation shows where the CRF's strength comes from — context and boundary features add +3.66 F1 (and +6.22 ORG), whereas unsupervised SVD+k-means clusters add only +0.27 and leave ORG unchanged — consistent with the long-entity weakness, since how a word is surrounded matters more than which lexical cluster it belongs to. Finally, ten independent 10% draws move CRF validation F1 by only ±0.59 points, an order of magnitude below the 10.32-point full-vs-10% gap on the same validation set, so E3's deficit reflects data scarcity rather than the particular sample; the widening BERT−CRF margin (+10.52 → +13.54) is therefore unlikely to be a sampling accident.
 
 ## References
 
@@ -156,3 +211,6 @@ Final shares sum to 100% and will be confirmed after the submission package is f
 | Shared 10% IDs | `data/train_10pct_ids.shared.json` |
 | CRF model | `models/crf_full.joblib`, `models/crf_10pct.joblib` |
 | BERT notebook | `src/train_bert.ipynb` |
+| Cross-validation & ablation | `results/extensions/` (`cv.csv`, `ablation.csv`, `cv_ablation.png`) |
+| Cluster analysis | `results/extensions/cluster_examples.csv`, `cluster_lookup.json` |
+| Robustness analysis | `results/robustness/` (`subset_scores.csv`, `paired_document_intervals.csv`, `robustness.png`) |
